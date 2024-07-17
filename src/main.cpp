@@ -1,4 +1,12 @@
+#include <iostream>
+
 #include "tgaimage.h"
+#include "model.h"
+
+Model* model = nullptr;
+
+int width = 400;
+int height = 400;
 
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
@@ -26,12 +34,29 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     }
 }
 
+Vec2i world2screen(Vec3f v){
+  return Vec2i(int((v.x + 1.0) * width / 2.0), int((v.y + 1.0) * height / 2.0));
+}
+
 int main(int argc, char** argv) {
-    TGAImage image(800, 600, TGAImage::RGB);
-    image.set(52, 41, red);
+    if (argc == 1 || argc > 2) {
+        model = new Model("/Users/atwbzhang/workspace/soft_renderer/obj/african_head/african_head.obj");
+    } else {
+        model = new Model(argv[1]);
+    }
+
+    TGAImage image(width, height, TGAImage::RGB);
+
+    for (int i = 0; i < model->nverts(); i++) {
+        Vec3f v = model->vert(i);
+        Vec2i p = world2screen(v);
+        image.set(p.x, p.y, white);
+    }
+
     line(13, 20, 80, 40, image, white); //线段A
     line(20, 13, 40, 80, image, red); //线段B
     line(80, 40, 13, 20, image, red);//线段C
+
     image.flip_vertically();
     image.write_tga_file("output.tga");
     return 0;
